@@ -200,7 +200,7 @@ async function callGroq({ apiKey, prompt }) {
       Authorization: `Bearer ${apiKey}`
     },
     body: JSON.stringify({
-      model: "llama-3.1-70b-versatile",
+      model: "llama-3.3-70b-versatile",
       temperature: 0.1,
       max_tokens: 1800,
       messages: [
