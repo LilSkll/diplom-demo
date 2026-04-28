@@ -1,0 +1,2113 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LinguaScope — Сопоставительный анализ языков</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400&family=JetBrains+Mono:wght@400;500;700&family=Spectral:ital,wght@0,300;0,400;0,600;1,300&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ink: #0e0e0f;
+    --paper: #f5f1ea;
+    --cream: #ede8dd;
+    --red: #c0392b;
+    --gold: #b5860d;
+    --steel: #4a5568;
+    --muted: #8a8070;
+    --border: #d0c8bb;
+    --en: #1a3a5c;
+    --es: #8b1a1a;
+    --de: #2d4a1e;
+    --ru: #3d1a5c;
+    --card-bg: #faf7f2;
+    --shadow: 0 2px 20px rgba(14,14,15,0.08);
+    --shadow-hover: 0 8px 40px rgba(14,14,15,0.16);
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Spectral', Georgia, serif;
+    background: var(--paper);
+    color: var(--ink);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* ═══ NOISE TEXTURE OVERLAY ═══ */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+    pointer-events: none;
+    z-index: 1000;
+    opacity: 0.5;
+  }
+
+  /* ═══ HEADER ═══ */
+  header {
+    border-bottom: 2px solid var(--ink);
+    padding: 0 3rem;
+    background: var(--paper);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+
+  .header-inner {
+    max-width: 1280px;
+    margin: 0 auto;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 64px;
+  }
+
+  .logo {
+    display: flex;
+    align-items: baseline;
+    gap: 0.5rem;
+    text-decoration: none;
+  }
+
+  .logo-main {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.5rem;
+    font-weight: 900;
+    letter-spacing: -0.02em;
+    color: var(--ink);
+  }
+
+  .logo-sub {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.65rem;
+    color: var(--muted);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+  }
+
+  nav {
+    display: flex;
+    gap: 2rem;
+    align-items: center;
+  }
+
+  nav a {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.72rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--steel);
+    text-decoration: none;
+    transition: color 0.2s;
+  }
+  nav a:hover { color: var(--ink); }
+
+  .badge-beta {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.6rem;
+    letter-spacing: 0.1em;
+    background: var(--ink);
+    color: var(--paper);
+    padding: 2px 8px;
+    border-radius: 2px;
+  }
+
+  /* ═══ HERO ═══ */
+  .hero {
+    max-width: 1280px;
+    margin: 0 auto;
+    padding: 5rem 3rem 3rem;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 4rem;
+    align-items: start;
+  }
+
+  .hero-kicker {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.7rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--muted);
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 1.5rem;
+  }
+
+  .hero-kicker::before {
+    content: '';
+    width: 32px;
+    height: 1px;
+    background: var(--muted);
+  }
+
+  h1 {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(2.2rem, 4vw, 3.5rem);
+    font-weight: 900;
+    line-height: 1.05;
+    letter-spacing: -0.03em;
+    margin-bottom: 1.5rem;
+  }
+
+  h1 em {
+    font-style: italic;
+    font-weight: 400;
+    color: var(--gold);
+  }
+
+  .hero-desc {
+    font-size: 1.05rem;
+    line-height: 1.7;
+    color: var(--steel);
+    font-weight: 300;
+    max-width: 48ch;
+    margin-bottom: 2.5rem;
+  }
+
+  .hero-stats {
+    display: flex;
+    gap: 2rem;
+    margin-bottom: 2.5rem;
+  }
+
+  .stat {
+    border-top: 2px solid var(--ink);
+    padding-top: 0.75rem;
+  }
+
+  .stat-num {
+    font-family: 'Playfair Display', serif;
+    font-size: 2rem;
+    font-weight: 700;
+    line-height: 1;
+    color: var(--ink);
+  }
+
+  .stat-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.62rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-top: 0.25rem;
+  }
+
+  /* ═══ LANG TAGS ═══ */
+  .lang-chips {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+  }
+
+  .lang-chip {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.72rem;
+    letter-spacing: 0.05em;
+    padding: 5px 14px;
+    border: 1.5px solid;
+    border-radius: 2px;
+    font-weight: 500;
+  }
+
+  .lang-chip.en { border-color: var(--en); color: var(--en); }
+  .lang-chip.es { border-color: var(--es); color: var(--es); }
+  .lang-chip.de { border-color: var(--de); color: var(--de); }
+  .lang-chip.ru { border-color: var(--ru); color: var(--ru); }
+
+  /* ═══ MAIN PANEL ═══ */
+  .main-content {
+    max-width: 1280px;
+    margin: 0 auto;
+    padding: 0 3rem 5rem;
+  }
+
+  /* ═══ TABS ═══ */
+  .tab-bar {
+    display: flex;
+    border-bottom: 2px solid var(--ink);
+    margin-bottom: 2rem;
+    gap: 0;
+  }
+
+  .tab-btn {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.72rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    padding: 1rem 1.75rem;
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: var(--muted);
+    border-bottom: 3px solid transparent;
+    margin-bottom: -2px;
+    transition: all 0.2s;
+    white-space: nowrap;
+  }
+
+  .tab-btn:hover { color: var(--ink); }
+
+  .tab-btn.active {
+    color: var(--ink);
+    border-bottom-color: var(--ink);
+    font-weight: 700;
+  }
+
+  .tab-panel { display: none; }
+  .tab-panel.active { display: block; }
+
+  /* ═══ INPUT AREA ═══ */
+  .analysis-grid {
+    display: grid;
+    grid-template-columns: 1fr 320px;
+    gap: 2rem;
+    align-items: start;
+  }
+
+  .input-section {
+    background: var(--card-bg);
+    border: 1.5px solid var(--border);
+    border-radius: 4px;
+    overflow: hidden;
+  }
+
+  .input-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.875rem 1.25rem;
+    border-bottom: 1.5px solid var(--border);
+    background: var(--cream);
+  }
+
+  .input-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.65rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+
+  .lang-selector {
+    display: flex;
+    gap: 0.35rem;
+  }
+
+  .lang-btn {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.65rem;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    padding: 3px 10px;
+    border: 1.5px solid var(--border);
+    border-radius: 2px;
+    background: var(--paper);
+    cursor: pointer;
+    color: var(--muted);
+    transition: all 0.15s;
+  }
+
+  .lang-btn:hover { border-color: var(--ink); color: var(--ink); }
+  .lang-btn.en.active { background: var(--en); border-color: var(--en); color: white; }
+  .lang-btn.es.active { background: var(--es); border-color: var(--es); color: white; }
+  .lang-btn.de.active { background: var(--de); border-color: var(--de); color: white; }
+  .lang-btn.ru.active { background: var(--ru); border-color: var(--ru); color: white; }
+
+  textarea {
+    width: 100%;
+    min-height: 140px;
+    padding: 1.25rem;
+    font-family: 'Spectral', serif;
+    font-size: 1.05rem;
+    line-height: 1.65;
+    border: none;
+    outline: none;
+    resize: none;
+    background: var(--card-bg);
+    color: var(--ink);
+  }
+
+  .input-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.75rem 1.25rem;
+    border-top: 1.5px solid var(--border);
+    background: var(--cream);
+  }
+
+  .char-count {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.65rem;
+    color: var(--muted);
+  }
+
+  .analyze-btn {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    padding: 0.6rem 1.5rem;
+    background: var(--ink);
+    color: var(--paper);
+    border: none;
+    border-radius: 2px;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .analyze-btn:hover { background: var(--red); transform: translateY(-1px); }
+  .analyze-btn:active { transform: translateY(0); }
+
+  .analyze-btn .spinner {
+    display: none;
+    width: 14px;
+    height: 14px;
+    border: 2px solid rgba(255,255,255,0.3);
+    border-top-color: white;
+    border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+  }
+
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .analyze-btn.loading .spinner { display: block; }
+  .analyze-btn.loading .btn-text { display: none; }
+  .analyze-btn:disabled { opacity: 0.75; cursor: not-allowed; transform: none; }
+
+  .inline-error {
+    margin-top: 0.75rem;
+    padding: 0.6rem 0.75rem;
+    border: 1px solid #fca5a5;
+    border-radius: 3px;
+    background: #fef2f2;
+    color: #991b1b;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.62rem;
+    letter-spacing: 0.04em;
+    line-height: 1.5;
+    display: none;
+  }
+
+  .inline-error.visible { display: block; }
+
+  /* ═══ SIDEBAR ═══ */
+  .sidebar {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  .sidebar-card {
+    background: var(--card-bg);
+    border: 1.5px solid var(--border);
+    border-radius: 4px;
+    overflow: hidden;
+  }
+
+  .sidebar-card-header {
+    padding: 0.75rem 1rem;
+    border-bottom: 1.5px solid var(--border);
+    background: var(--cream);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.65rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+
+  .sidebar-card-body {
+    padding: 1rem;
+  }
+
+  /* ═══ EXAMPLES ═══ */
+  .examples-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .example-item {
+    font-family: 'Spectral', serif;
+    font-size: 0.88rem;
+    font-style: italic;
+    color: var(--steel);
+    padding: 0.5rem 0.75rem;
+    border: 1px solid var(--border);
+    border-radius: 2px;
+    cursor: pointer;
+    background: var(--paper);
+    transition: all 0.15s;
+    line-height: 1.4;
+  }
+
+  .example-item:hover {
+    background: var(--cream);
+    border-color: var(--ink);
+    color: var(--ink);
+  }
+
+  .example-lang {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.6rem;
+    font-style: normal;
+    letter-spacing: 0.08em;
+    color: var(--muted);
+    display: block;
+    margin-bottom: 2px;
+  }
+
+  /* ═══ MODULE TOGGLES ═══ */
+  .module-toggles {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .toggle-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .toggle-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.68rem;
+    color: var(--steel);
+  }
+
+  .toggle {
+    position: relative;
+    width: 36px;
+    height: 20px;
+  }
+
+  .toggle input { opacity: 0; width: 0; height: 0; }
+
+  .toggle-track {
+    position: absolute;
+    inset: 0;
+    background: var(--border);
+    border-radius: 10px;
+    cursor: pointer;
+    transition: background 0.2s;
+  }
+
+  .toggle-track::after {
+    content: '';
+    position: absolute;
+    width: 14px;
+    height: 14px;
+    background: white;
+    border-radius: 50%;
+    top: 3px;
+    left: 3px;
+    transition: transform 0.2s;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+  }
+
+  .toggle input:checked + .toggle-track { background: var(--ink); }
+  .toggle input:checked + .toggle-track::after { transform: translateX(16px); }
+
+  /* ═══ RESULTS ═══ */
+  .results-section {
+    margin-top: 2rem;
+    opacity: 0;
+    transform: translateY(12px);
+    transition: all 0.4s ease;
+  }
+
+  .results-section.visible {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  .results-header {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+    padding-bottom: 1rem;
+    border-bottom: 1.5px solid var(--border);
+  }
+
+  .results-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.4rem;
+    font-weight: 700;
+  }
+
+  .results-meta {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.62rem;
+    color: var(--muted);
+    margin-left: auto;
+    letter-spacing: 0.08em;
+  }
+
+  /* ═══ MORPHOLOGY TABLE ═══ */
+  .morph-section {
+    background: var(--card-bg);
+    border: 1.5px solid var(--border);
+    border-radius: 4px;
+    overflow: hidden;
+    margin-bottom: 1.5rem;
+  }
+
+  .morph-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.875rem 1.25rem;
+    background: var(--cream);
+    border-bottom: 1.5px solid var(--border);
+  }
+
+  .morph-title {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--ink);
+  }
+
+  .accuracy-badge {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.62rem;
+    padding: 2px 8px;
+    background: var(--de);
+    color: white;
+    border-radius: 2px;
+  }
+
+  .tokens-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    padding: 1.25rem;
+    border-bottom: 1.5px solid var(--border);
+  }
+
+  .token-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.3rem;
+    padding: 0.5rem 0.75rem;
+    background: var(--paper);
+    border: 1.5px solid var(--border);
+    border-radius: 3px;
+    cursor: pointer;
+    transition: all 0.15s;
+    min-width: 56px;
+    animation: tokenIn 0.3s ease forwards;
+    opacity: 0;
+    transform: translateY(6px);
+  }
+
+  @keyframes tokenIn {
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .token-card:hover {
+    border-color: var(--ink);
+    transform: translateY(-2px);
+    box-shadow: var(--shadow);
+  }
+
+  .token-card.selected {
+    border-color: var(--ink);
+    background: var(--ink);
+  }
+  .token-card.selected .token-word { color: var(--paper); }
+  .token-card.selected .token-pos { background: rgba(255,255,255,0.2); color: var(--paper); }
+
+  .token-word {
+    font-family: 'Spectral', serif;
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--ink);
+  }
+
+  .token-lemma {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.6rem;
+    color: var(--muted);
+  }
+
+  .token-pos {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.58rem;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    padding: 1px 6px;
+    border-radius: 2px;
+    text-transform: uppercase;
+  }
+
+  .pos-NOUN { background: #dbeafe; color: #1e40af; }
+  .pos-VERB { background: #dcfce7; color: #166534; }
+  .pos-ADJ  { background: #fef9c3; color: #854d0e; }
+  .pos-ADV  { background: #fce7f3; color: #9d174d; }
+  .pos-DET  { background: #ede9fe; color: #5b21b6; }
+  .pos-PREP { background: #fee2e2; color: #991b1b; }
+  .pos-PRON { background: #ffedd5; color: #9a3412; }
+  .pos-PUNCT{ background: #f1f5f9; color: #64748b; }
+  .pos-ADP  { background: #fee2e2; color: #991b1b; }
+  .pos-AUX  { background: #d1fae5; color: #065f46; }
+  .pos-CCONJ{ background: #e0f2fe; color: #075985; }
+  .pos-NUM  { background: #fdf4ff; color: #7e22ce; }
+
+  /* ═══ TOKEN DETAIL ═══ */
+  .token-detail {
+    padding: 1.25rem;
+    display: none;
+  }
+
+  .token-detail.visible { display: block; }
+
+  .detail-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+    gap: 0.75rem;
+  }
+
+  .detail-item {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .detail-key {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.6rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+
+  .detail-val {
+    font-family: 'Spectral', serif;
+    font-size: 0.95rem;
+    color: var(--ink);
+    font-weight: 600;
+  }
+
+  /* ═══ SYNTAX TREE ═══ */
+  .tree-section {
+    background: var(--card-bg);
+    border: 1.5px solid var(--border);
+    border-radius: 4px;
+    overflow: hidden;
+    margin-bottom: 1.5rem;
+  }
+
+  #dep-tree {
+    overflow-x: auto;
+    padding: 1.5rem;
+    min-height: 200px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  #dep-tree svg {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    max-width: 100%;
+  }
+
+  /* ═══ COMPARISON GRID ═══ */
+  .compare-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+  }
+
+  .compare-cell {
+    background: var(--card-bg);
+    border: 1.5px solid var(--border);
+    border-radius: 4px;
+    overflow: hidden;
+  }
+
+  .compare-cell-header {
+    padding: 0.625rem 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    border-bottom: 1.5px solid var(--border);
+  }
+
+  .lang-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+  }
+
+  .lang-dot.en { background: var(--en); }
+  .lang-dot.es { background: var(--es); }
+  .lang-dot.de { background: var(--de); }
+  .lang-dot.ru { background: var(--ru); }
+
+  .lang-name {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  .lang-name.en { color: var(--en); }
+  .lang-name.es { color: var(--es); }
+  .lang-name.de { color: var(--de); }
+  .lang-name.ru { color: var(--ru); }
+
+  .compare-cell-body {
+    padding: 1rem;
+  }
+
+  .compare-sentence {
+    font-family: 'Spectral', serif;
+    font-size: 1.05rem;
+    color: var(--ink);
+    margin-bottom: 0.75rem;
+    line-height: 1.5;
+  }
+
+  .compare-tokens {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.35rem;
+  }
+
+  .mini-token {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.62rem;
+    padding: 2px 6px;
+    border-radius: 2px;
+    font-weight: 500;
+  }
+
+  /* ═══ TYPOLOGY CHART ═══ */
+  .typology-section {
+    background: var(--card-bg);
+    border: 1.5px solid var(--border);
+    border-radius: 4px;
+    overflow: hidden;
+    margin-bottom: 1.5rem;
+  }
+
+  .typo-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    padding: 1.25rem;
+    gap: 0.75rem;
+  }
+
+  .typo-row {
+    display: contents;
+  }
+
+  .typo-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.6rem;
+    letter-spacing: 0.08em;
+    color: var(--muted);
+    text-transform: uppercase;
+    padding: 0.35rem 0;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+  }
+
+  .typo-val {
+    font-family: 'Spectral', serif;
+    font-size: 0.82rem;
+    padding: 0.35rem 0;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    color: var(--ink);
+  }
+
+  .typo-check { color: var(--de); font-size: 1.1rem; }
+  .typo-cross { color: var(--red); font-size: 1rem; }
+  .typo-partial { color: var(--gold); font-size: 1rem; }
+
+  /* ═══ TRANSLATION PANEL ═══ */
+  .translation-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+  }
+
+  .trans-cell {
+    background: var(--card-bg);
+    border: 1.5px solid var(--border);
+    border-radius: 4px;
+    overflow: hidden;
+    transition: all 0.2s;
+  }
+
+  .trans-cell:hover {
+    border-color: var(--ink);
+    box-shadow: var(--shadow);
+  }
+
+  .trans-cell-header {
+    padding: 0.625rem 0.875rem;
+    border-bottom: 1.5px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .trans-body {
+    padding: 1rem;
+    font-family: 'Spectral', serif;
+    font-size: 0.95rem;
+    line-height: 1.6;
+    color: var(--ink);
+    min-height: 80px;
+  }
+
+  .trans-metrics {
+    padding: 0.625rem 0.875rem;
+    border-top: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+  }
+
+  .bleu-bar-wrap {
+    flex: 1;
+    height: 4px;
+    background: var(--border);
+    border-radius: 2px;
+    overflow: hidden;
+  }
+
+  .bleu-bar {
+    height: 100%;
+    border-radius: 2px;
+    transition: width 1s ease;
+  }
+
+  .bleu-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.6rem;
+    color: var(--muted);
+    white-space: nowrap;
+  }
+
+  /* ═══ METRICS ROW ═══ */
+  .metrics-row {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1rem;
+    margin-bottom: 2rem;
+  }
+
+  .metric-card {
+    background: var(--card-bg);
+    border: 1.5px solid var(--border);
+    border-radius: 4px;
+    padding: 1.25rem;
+    text-align: center;
+    transition: all 0.2s;
+  }
+
+  .metric-card:hover {
+    border-color: var(--ink);
+    transform: translateY(-2px);
+    box-shadow: var(--shadow);
+  }
+
+  .metric-num {
+    font-family: 'Playfair Display', serif;
+    font-size: 2rem;
+    font-weight: 700;
+    line-height: 1;
+    margin-bottom: 0.25rem;
+    color: var(--ink);
+  }
+
+  .metric-name {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.6rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+
+  /* ═══ ABOUT / ARCH ═══ */
+  .arch-section {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2rem;
+    margin-bottom: 2rem;
+  }
+
+  .arch-card {
+    background: var(--card-bg);
+    border: 1.5px solid var(--border);
+    border-radius: 4px;
+    padding: 1.5rem;
+  }
+
+  .arch-card h3 {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.15rem;
+    font-weight: 700;
+    margin-bottom: 1rem;
+    padding-bottom: 0.75rem;
+    border-bottom: 1.5px solid var(--border);
+  }
+
+  .stack-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .stack-item {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.5rem 0.75rem;
+    background: var(--paper);
+    border: 1px solid var(--border);
+    border-radius: 3px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.72rem;
+    color: var(--steel);
+    transition: all 0.15s;
+  }
+
+  .stack-item:hover {
+    border-color: var(--ink);
+    color: var(--ink);
+  }
+
+  .stack-icon {
+    font-size: 1rem;
+  }
+
+  .stack-version {
+    margin-left: auto;
+    color: var(--muted);
+    font-size: 0.62rem;
+  }
+
+  /* ═══ ACCURACY CHART ═══ */
+  .accuracy-chart {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+
+  .acc-row {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+  }
+
+  .acc-task {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.62rem;
+    color: var(--muted);
+    width: 120px;
+    flex-shrink: 0;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+
+  .acc-bar-wrap {
+    flex: 1;
+    height: 8px;
+    background: var(--cream);
+    border-radius: 2px;
+    overflow: hidden;
+  }
+
+  .acc-bar {
+    height: 100%;
+    border-radius: 2px;
+    background: var(--ink);
+    width: 0;
+    transition: width 1.2s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .acc-pct {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.68rem;
+    font-weight: 700;
+    color: var(--ink);
+    width: 42px;
+    text-align: right;
+  }
+
+  /* ═══ FOOTER ═══ */
+  footer {
+    border-top: 2px solid var(--ink);
+    background: var(--ink);
+    color: var(--paper);
+    padding: 2rem 3rem;
+  }
+
+  .footer-inner {
+    max-width: 1280px;
+    margin: 0 auto;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 1rem;
+  }
+
+  .footer-logo {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.1rem;
+    font-weight: 900;
+    letter-spacing: -0.02em;
+  }
+
+  .footer-info {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.62rem;
+    color: rgba(245,241,234,0.5);
+    letter-spacing: 0.08em;
+  }
+
+  .footer-tech {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+  }
+
+  .tech-tag {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.6rem;
+    padding: 2px 8px;
+    border: 1px solid rgba(245,241,234,0.25);
+    border-radius: 2px;
+    color: rgba(245,241,234,0.6);
+  }
+
+  /* ═══ ANIMATIONS ═══ */
+  @keyframes fadeSlideIn {
+    from { opacity: 0; transform: translateY(16px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  .hero { animation: fadeSlideIn 0.5s ease forwards; }
+
+  /* ═══ LOADING SKELETON ═══ */
+  .skeleton {
+    background: linear-gradient(90deg, var(--cream) 25%, var(--border) 50%, var(--cream) 75%);
+    background-size: 200% 100%;
+    animation: shimmer 1.5s infinite;
+    border-radius: 3px;
+  }
+
+  @keyframes shimmer {
+    0%   { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+  }
+
+  /* ═══ SCROLLBAR ═══ */
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { background: var(--cream); }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+  ::-webkit-scrollbar-thumb:hover { background: var(--muted); }
+
+  /* ═══ RESPONSIVE ═══ */
+  @media (max-width: 900px) {
+    .hero { grid-template-columns: 1fr; padding: 3rem 1.5rem 2rem; }
+    .analysis-grid { grid-template-columns: 1fr; }
+    .compare-grid { grid-template-columns: 1fr; }
+    .translation-grid { grid-template-columns: 1fr 1fr; }
+    .metrics-row { grid-template-columns: 1fr 1fr; }
+    .arch-section { grid-template-columns: 1fr; }
+    .main-content { padding: 0 1.5rem 3rem; }
+    header { padding: 0 1.5rem; }
+    .typo-grid { grid-template-columns: repeat(3, 1fr); }
+    nav { display: none; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-inner">
+    <a class="logo" href="#">
+      <span class="logo-main">LinguaScope</span>
+      <span class="logo-sub">NLP Platform v1.0</span>
+    </a>
+    <nav>
+      <a href="#" onclick="switchTab('analyze'); return false;">Анализ</a>
+      <a href="#" onclick="switchTab('compare'); return false;">Сравнение</a>
+      <a href="#" onclick="switchTab('translate'); return false;">Перевод</a>
+      <a href="#" onclick="switchTab('about'); return false;">Архитектура</a>
+      <span class="badge-beta">BETA</span>
+    </nav>
+  </div>
+</header>
+
+<section class="hero">
+  <div>
+    <div class="hero-kicker">Дипломный проект · РУДН · Лингвистика</div>
+    <h1>
+      Сопоставительный<br>
+      анализ <em>четырёх</em><br>
+      языков с помощью ИИ
+    </h1>
+    <p class="hero-desc">
+      Платформа для комплексного морфологического, синтаксического анализа
+      и машинного перевода на основе нейросетевых архитектур spaCy + Hugging Face Transformers.
+    </p>
+    <div class="lang-chips">
+      <span class="lang-chip en">English</span>
+      <span class="lang-chip es">Español</span>
+      <span class="lang-chip de">Deutsch</span>
+      <span class="lang-chip ru">Русский</span>
+    </div>
+  </div>
+  <div>
+    <div class="hero-stats">
+      <div class="stat">
+        <div class="stat-num">97.8%</div>
+        <div class="stat-label">POS Accuracy</div>
+      </div>
+      <div class="stat">
+        <div class="stat-num">4</div>
+        <div class="stat-label">Языка</div>
+      </div>
+      <div class="stat">
+        <div class="stat-num">111K</div>
+        <div class="stat-label">UD Sentences</div>
+      </div>
+    </div>
+    <div style="background:var(--card-bg);border:1.5px solid var(--border);border-radius:4px;padding:1.25rem;">
+      <div style="font-family:'JetBrains Mono',monospace;font-size:0.65rem;color:var(--muted);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:0.75rem;">Технологический стек</div>
+      <div style="display:flex;flex-wrap:wrap;gap:0.35rem;">
+        <span style="font-family:'JetBrains Mono',monospace;font-size:0.62rem;padding:3px 8px;background:var(--en);color:white;border-radius:2px;">FastAPI</span>
+        <span style="font-family:'JetBrains Mono',monospace;font-size:0.62rem;padding:3px 8px;background:var(--es);color:white;border-radius:2px;">spaCy 3.7</span>
+        <span style="font-family:'JetBrains Mono',monospace;font-size:0.62rem;padding:3px 8px;background:var(--de);color:white;border-radius:2px;">React 18</span>
+        <span style="font-family:'JetBrains Mono',monospace;font-size:0.62rem;padding:3px 8px;background:var(--ru);color:white;border-radius:2px;">HF Transformers</span>
+        <span style="font-family:'JetBrains Mono',monospace;font-size:0.62rem;padding:3px 8px;background:var(--gold);color:white;border-radius:2px;">PostgreSQL</span>
+        <span style="font-family:'JetBrains Mono',monospace;font-size:0.62rem;padding:3px 8px;background:var(--steel);color:white;border-radius:2px;">D3.js</span>
+        <span style="font-family:'JetBrains Mono',monospace;font-size:0.62rem;padding:3px 8px;background:var(--ink);color:white;border-radius:2px;">Docker</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<main class="main-content">
+
+  <!-- TABS -->
+  <div class="tab-bar">
+    <button class="tab-btn active" onclick="switchTab('analyze')" id="tab-analyze">Морфоанализ</button>
+    <button class="tab-btn" onclick="switchTab('compare')" id="tab-compare">Сравнение языков</button>
+    <button class="tab-btn" onclick="switchTab('translate')" id="tab-translate">Перевод</button>
+    <button class="tab-btn" onclick="switchTab('about')" id="tab-about">Архитектура</button>
+  </div>
+
+  <!-- ══════ TAB 1: ANALYZE ══════ -->
+  <div class="tab-panel active" id="panel-analyze">
+    <div class="analysis-grid">
+      <!-- INPUT -->
+      <div>
+        <div class="input-section">
+          <div class="input-header">
+            <span class="input-label">Введите текст для анализа</span>
+            <div class="lang-selector">
+              <button class="lang-btn en active" onclick="setLang('en')">EN</button>
+              <button class="lang-btn es" onclick="setLang('es')">ES</button>
+              <button class="lang-btn de" onclick="setLang('de')">DE</button>
+              <button class="lang-btn ru" onclick="setLang('ru')">RU</button>
+            </div>
+          </div>
+          <textarea id="input-text" placeholder="The neural network processes linguistic structures with remarkable precision..."></textarea>
+          <div class="input-footer">
+            <span class="char-count" id="char-count">0 символов</span>
+            <button class="analyze-btn" id="analyze-btn" onclick="runAnalysis()">
+              <div class="spinner"></div>
+              <span class="btn-text">Анализировать →</span>
+            </button>
+          </div>
+        </div>
+        <div class="inline-error" id="analysis-error"></div>
+      </div>
+
+      <!-- SIDEBAR -->
+      <div class="sidebar">
+        <div class="sidebar-card">
+          <div class="sidebar-card-header">Примеры</div>
+          <div class="sidebar-card-body">
+            <div class="examples-list">
+              <div class="example-item" onclick="loadExample('en1')">
+                <span class="example-lang">EN</span>
+                The scientist discovered a new method for analyzing neural networks.
+              </div>
+              <div class="example-item" onclick="loadExample('es1')">
+                <span class="example-lang">ES</span>
+                El científico descubrió un nuevo método de análisis lingüístico.
+              </div>
+              <div class="example-item" onclick="loadExample('de1')">
+                <span class="example-lang">DE</span>
+                Der Wissenschaftler entdeckte eine neue Analysemethode für Sprachstrukturen.
+              </div>
+              <div class="example-item" onclick="loadExample('ru1')">
+                <span class="example-lang">RU</span>
+                Учёный обнаружил новый метод анализа лингвистических структур.
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="sidebar-card">
+          <div class="sidebar-card-header">Модули анализа</div>
+          <div class="sidebar-card-body">
+            <div class="module-toggles">
+              <div class="toggle-row">
+                <span class="toggle-label">POS-теггинг</span>
+                <label class="toggle"><input type="checkbox" checked><span class="toggle-track"></span></label>
+              </div>
+              <div class="toggle-row">
+                <span class="toggle-label">Лемматизация</span>
+                <label class="toggle"><input type="checkbox" checked><span class="toggle-track"></span></label>
+              </div>
+              <div class="toggle-row">
+                <span class="toggle-label">Dep. parsing</span>
+                <label class="toggle"><input type="checkbox" checked><span class="toggle-track"></span></label>
+              </div>
+              <div class="toggle-row">
+                <span class="toggle-label">Морф. признаки</span>
+                <label class="toggle"><input type="checkbox" checked><span class="toggle-track"></span></label>
+              </div>
+              <div class="toggle-row">
+                <span class="toggle-label">NER</span>
+                <label class="toggle"><input type="checkbox"><span class="toggle-track"></span></label>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- RESULTS -->
+    <div class="results-section" id="results">
+
+      <div class="results-header">
+        <div class="results-title">Результаты анализа</div>
+        <div class="results-meta" id="results-meta">— токенов · модель: en_core_web_trf</div>
+      </div>
+
+      <!-- METRICS -->
+      <div class="metrics-row">
+        <div class="metric-card">
+          <div class="metric-num" id="m-tokens">—</div>
+          <div class="metric-name">Токенов</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-num" id="m-sentences">—</div>
+          <div class="metric-name">Предложений</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-num" id="m-types">—</div>
+          <div class="metric-name">Уникальных POS</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-num" id="m-synth">—</div>
+          <div class="metric-name">Индекс синт.</div>
+        </div>
+      </div>
+
+      <!-- MORPH TABLE -->
+      <div class="morph-section">
+        <div class="morph-header">
+          <span class="morph-title">Морфологический разбор</span>
+          <span class="accuracy-badge" id="pos-accuracy">spaCy · 97.8% acc.</span>
+        </div>
+        <div class="tokens-row" id="tokens-row"></div>
+        <div class="token-detail" id="token-detail">
+          <div class="detail-grid" id="detail-grid"></div>
+        </div>
+      </div>
+
+      <!-- DEP TREE -->
+      <div class="tree-section">
+        <div class="morph-header">
+          <span class="morph-title">Дерево зависимостей (Universal Dependencies)</span>
+          <span class="accuracy-badge">UAS 92–95%</span>
+        </div>
+        <div id="dep-tree"></div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ══════ TAB 2: COMPARE ══════ -->
+  <div class="tab-panel" id="panel-compare">
+    <p style="font-family:'Spectral',serif;font-size:1rem;color:var(--steel);margin-bottom:1.5rem;line-height:1.7;">
+      Сопоставление одной фразы — <em>«Учёный обнаружил новый метод»</em> — на четырёх языках.
+      Анализ демонстрирует типологические различия: фиксированный SVO в английском,
+      V2-правило в немецком, свободный порядок слов в русском.
+    </p>
+
+    <!-- POS COMPARISON -->
+    <div class="morph-section" style="margin-bottom:1.5rem;">
+      <div class="morph-header">
+        <span class="morph-title">POS-разметка: параллельный корпус</span>
+      </div>
+      <div class="compare-grid" style="padding:1.25rem;gap:1rem;">
+        <div class="compare-cell">
+          <div class="compare-cell-header">
+            <span class="lang-dot en"></span>
+            <span class="lang-name en">English · SVO фиксированный</span>
+          </div>
+          <div class="compare-cell-body">
+            <div class="compare-sentence">The scientist discovered a new method.</div>
+            <div class="compare-tokens">
+              <span class="mini-token pos-DET">The · DET</span>
+              <span class="mini-token pos-NOUN">scientist · NOUN</span>
+              <span class="mini-token pos-VERB">discovered · VERB</span>
+              <span class="mini-token pos-DET">a · DET</span>
+              <span class="mini-token pos-ADJ">new · ADJ</span>
+              <span class="mini-token pos-NOUN">method · NOUN</span>
+            </div>
+          </div>
+        </div>
+        <div class="compare-cell">
+          <div class="compare-cell-header">
+            <span class="lang-dot es"></span>
+            <span class="lang-name es">Español · SVO гибкий</span>
+          </div>
+          <div class="compare-cell-body">
+            <div class="compare-sentence">El científico descubrió un nuevo método.</div>
+            <div class="compare-tokens">
+              <span class="mini-token pos-DET">El · DET</span>
+              <span class="mini-token pos-NOUN">científico · NOUN</span>
+              <span class="mini-token pos-VERB">descubrió · VERB</span>
+              <span class="mini-token pos-DET">un · DET</span>
+              <span class="mini-token pos-ADJ">nuevo · ADJ</span>
+              <span class="mini-token pos-NOUN">método · NOUN</span>
+            </div>
+          </div>
+        </div>
+        <div class="compare-cell">
+          <div class="compare-cell-header">
+            <span class="lang-dot de"></span>
+            <span class="lang-name de">Deutsch · V2-правило</span>
+          </div>
+          <div class="compare-cell-body">
+            <div class="compare-sentence">Der Wissenschaftler entdeckte eine neue Methode.</div>
+            <div class="compare-tokens">
+              <span class="mini-token pos-DET">Der · DET</span>
+              <span class="mini-token pos-NOUN">Wissenschaftler · NOUN</span>
+              <span class="mini-token pos-VERB">entdeckte · VERB</span>
+              <span class="mini-token pos-DET">eine · DET</span>
+              <span class="mini-token pos-ADJ">neue · ADJ</span>
+              <span class="mini-token pos-NOUN">Methode · NOUN</span>
+            </div>
+          </div>
+        </div>
+        <div class="compare-cell">
+          <div class="compare-cell-header">
+            <span class="lang-dot ru"></span>
+            <span class="lang-name ru">Русский · свободный порядок</span>
+          </div>
+          <div class="compare-cell-body">
+            <div class="compare-sentence">Учёный обнаружил новый метод.</div>
+            <div class="compare-tokens">
+              <span class="mini-token pos-NOUN">Учёный · NOUN</span>
+              <span class="mini-token pos-VERB">обнаружил · VERB</span>
+              <span class="mini-token pos-ADJ">новый · ADJ</span>
+              <span class="mini-token pos-NOUN">метод · NOUN</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TYPOLOGY TABLE -->
+    <div class="typology-section">
+      <div class="morph-header">
+        <span class="morph-title">Типологическая матрица · Таблица 1.1</span>
+        <span class="accuracy-badge" style="background:var(--gold);">10 параметров</span>
+      </div>
+      <div style="overflow-x:auto;padding:1.25rem;">
+        <table style="width:100%;border-collapse:collapse;font-family:'JetBrains Mono',monospace;font-size:0.7rem;">
+          <thead>
+            <tr>
+              <th style="text-align:left;padding:0.5rem 0.75rem;border-bottom:2px solid var(--ink);color:var(--muted);font-weight:400;letter-spacing:0.08em;text-transform:uppercase;">Параметр</th>
+              <th style="padding:0.5rem 0.75rem;border-bottom:2px solid var(--ink);color:var(--en);font-weight:700;">EN</th>
+              <th style="padding:0.5rem 0.75rem;border-bottom:2px solid var(--ink);color:var(--es);font-weight:700;">ES</th>
+              <th style="padding:0.5rem 0.75rem;border-bottom:2px solid var(--ink);color:var(--de);font-weight:700;">DE</th>
+              <th style="padding:0.5rem 0.75rem;border-bottom:2px solid var(--ink);color:var(--ru);font-weight:700;">RU</th>
+            </tr>
+          </thead>
+          <tbody id="typology-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- SYNTHESIS INDEX CHART -->
+    <div class="morph-section">
+      <div class="morph-header">
+        <span class="morph-title">Индекс синтетичности языков</span>
+      </div>
+      <div style="padding:1.5rem;">
+        <div id="synth-chart"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════ TAB 3: TRANSLATE ══════ -->
+  <div class="tab-panel" id="panel-translate">
+    <p style="font-family:'Spectral',serif;font-size:1rem;color:var(--steel);margin-bottom:1.5rem;line-height:1.7;">
+      Модуль машинного перевода на основе <strong>MarianMT</strong> (Helsinki-NLP) с оценкой качества по метрике <strong>BLEU</strong>.
+      Поддерживаются все 12 направленных пар между четырьмя языками.
+    </p>
+
+    <div style="display:flex;gap:1rem;margin-bottom:1.5rem;align-items:flex-end;flex-wrap:wrap;">
+      <div class="input-section" style="flex:1;min-width:280px;">
+        <div class="input-header">
+          <span class="input-label">Исходный текст</span>
+          <div class="lang-selector">
+            <button class="lang-btn en active" onclick="setTransLang('src','en',this)">EN</button>
+            <button class="lang-btn es" onclick="setTransLang('src','es',this)">ES</button>
+            <button class="lang-btn de" onclick="setTransLang('src','de',this)">DE</button>
+            <button class="lang-btn ru" onclick="setTransLang('src','ru',this)">RU</button>
+          </div>
+        </div>
+        <textarea id="trans-input" style="min-height:110px;font-size:0.95rem;" placeholder="Neural networks transform the way we analyze language...">Neural networks transform the way we analyze language and understand linguistic structures across different language families.</textarea>
+        <div class="input-footer">
+          <span class="char-count"></span>
+          <button class="analyze-btn" id="translate-btn" onclick="runTranslation()">
+            <div class="spinner"></div>
+            <span class="btn-text">Перевести →</span>
+          </button>
+        </div>
+      </div>
+    </div>
+    <div class="inline-error" id="translate-error"></div>
+
+    <div class="translation-grid" id="trans-results">
+      <!-- filled by JS -->
+    </div>
+
+    <div class="morph-section">
+      <div class="morph-header">
+        <span class="morph-title">Метрики качества перевода (WMT 2023)</span>
+      </div>
+      <div style="padding:1.5rem;">
+        <div class="accuracy-chart" id="bleu-chart"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════ TAB 4: ABOUT ══════ -->
+  <div class="tab-panel" id="panel-about">
+    <div class="arch-section">
+      <div class="arch-card">
+        <h3>Backend-стек</h3>
+        <div class="stack-list">
+          <div class="stack-item"><span class="stack-icon">🐍</span>Python 3.10+<span class="stack-version">core lang</span></div>
+          <div class="stack-item"><span class="stack-icon">⚡</span>FastAPI 0.100+<span class="stack-version">async REST API</span></div>
+          <div class="stack-item"><span class="stack-icon">🔬</span>spaCy 3.7<span class="stack-version">POS · Dep · NER</span></div>
+          <div class="stack-item"><span class="stack-icon">🤗</span>Hugging Face Transformers 4.30+<span class="stack-version">mBERT · MarianMT</span></div>
+          <div class="stack-item"><span class="stack-icon">🐘</span>PostgreSQL 14+<span class="stack-version">хранение результатов</span></div>
+          <div class="stack-item"><span class="stack-icon">🧱</span>Pydantic v2<span class="stack-version">валидация данных</span></div>
+        </div>
+      </div>
+      <div class="arch-card">
+        <h3>Frontend-стек</h3>
+        <div class="stack-list">
+          <div class="stack-item"><span class="stack-icon">⚛</span>React 18+<span class="stack-version">UI компоненты</span></div>
+          <div class="stack-item"><span class="stack-icon">🎨</span>Material-UI 5+<span class="stack-version">Design System</span></div>
+          <div class="stack-item"><span class="stack-icon">📊</span>D3.js 7+<span class="stack-version">dep. деревья · графики</span></div>
+          <div class="stack-item"><span class="stack-icon">🐋</span>Docker + Nginx<span class="stack-version">контейнеризация</span></div>
+          <div class="stack-item"><span class="stack-icon">🦄</span>Gunicorn<span class="stack-version">WSGI server</span></div>
+          <div class="stack-item"><span class="stack-icon">📋</span>Universal Dependencies 2.12<span class="stack-version">111K предложений</span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ACCURACY CHART -->
+    <div class="morph-section" style="margin-bottom:1.5rem;">
+      <div class="morph-header">
+        <span class="morph-title">Точность моделей spaCy по задачам</span>
+        <span class="accuracy-badge">OntoNotes 5.0 benchmark</span>
+      </div>
+      <div style="padding:1.5rem;">
+        <div class="accuracy-chart" id="acc-chart"></div>
+      </div>
+    </div>
+
+    <!-- ARCHITECTURE DIAGRAM -->
+    <div class="morph-section">
+      <div class="morph-header">
+        <span class="morph-title">Архитектура системы</span>
+      </div>
+      <div style="padding:1.5rem;overflow-x:auto;">
+        <svg viewBox="0 0 820 320" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:820px;font-family:'JetBrains Mono',monospace;font-size:11px;">
+          <!-- CLIENT -->
+          <rect x="20" y="120" width="130" height="80" rx="3" fill="#f5f1ea" stroke="#0e0e0f" stroke-width="1.5"/>
+          <text x="85" y="153" text-anchor="middle" font-weight="700" font-size="12">React 18</text>
+          <text x="85" y="170" text-anchor="middle" fill="#8a8070">MUI + D3.js</text>
+          <text x="85" y="185" text-anchor="middle" fill="#8a8070">Browser SPA</text>
+
+          <!-- ARROW -->
+          <line x1="152" y1="160" x2="200" y2="160" stroke="#0e0e0f" stroke-width="1.5" marker-end="url(#arr)"/>
+          <text x="176" y="152" text-anchor="middle" fill="#8a8070" font-size="10">HTTP/REST</text>
+
+          <!-- FASTAPI -->
+          <rect x="200" y="100" width="150" height="120" rx="3" fill="#f5f1ea" stroke="#1a3a5c" stroke-width="2"/>
+          <text x="275" y="128" text-anchor="middle" font-weight="700" font-size="12" fill="#1a3a5c">FastAPI</text>
+          <text x="275" y="146" text-anchor="middle" fill="#8a8070">async/await</text>
+          <line x1="210" y1="154" x2="340" y2="154" stroke="#d0c8bb" stroke-width="1"/>
+          <text x="275" y="170" text-anchor="middle" fill="#4a5568">OpenAPI docs</text>
+          <text x="275" y="186" text-anchor="middle" fill="#4a5568">Pydantic v2</text>
+          <text x="275" y="202" text-anchor="middle" fill="#4a5568">JWT auth</text>
+
+          <!-- ARROW DOWN -->
+          <line x1="275" y1="222" x2="275" y2="255" stroke="#0e0e0f" stroke-width="1.5" marker-end="url(#arr)"/>
+
+          <!-- POSTGRES -->
+          <rect x="200" y="255" width="150" height="50" rx="3" fill="#f5f1ea" stroke="#b5860d" stroke-width="1.5"/>
+          <text x="275" y="275" text-anchor="middle" font-weight="700" fill="#b5860d">PostgreSQL 14</text>
+          <text x="275" y="292" text-anchor="middle" fill="#8a8070">результаты · сессии</text>
+
+          <!-- ARROW RIGHT -->
+          <line x1="352" y1="160" x2="400" y2="160" stroke="#0e0e0f" stroke-width="1.5" marker-end="url(#arr)"/>
+
+          <!-- NLP CORE -->
+          <rect x="400" y="80" width="160" height="160" rx="3" fill="#f5f1ea" stroke="#8b1a1a" stroke-width="2"/>
+          <text x="480" y="108" text-anchor="middle" font-weight="700" font-size="12" fill="#8b1a1a">NLP Core</text>
+          <line x1="410" y1="116" x2="550" y2="116" stroke="#d0c8bb" stroke-width="1"/>
+          <text x="480" y="134" text-anchor="middle" fill="#4a5568">spaCy 3.7</text>
+          <text x="480" y="150" text-anchor="middle" fill="#8a8070">POS · Lemma · Dep</text>
+          <line x1="410" y1="162" x2="550" y2="162" stroke="#d0c8bb" stroke-width="1"/>
+          <text x="480" y="180" text-anchor="middle" fill="#4a5568">HF Transformers</text>
+          <text x="480" y="196" text-anchor="middle" fill="#8a8070">mBERT · MarianMT</text>
+          <line x1="410" y1="208" x2="550" y2="208" stroke="#d0c8bb" stroke-width="1"/>
+          <text x="480" y="224" text-anchor="middle" fill="#4a5568">Universal Dependencies</text>
+
+          <!-- ARROW RIGHT -->
+          <line x1="562" y1="160" x2="610" y2="160" stroke="#0e0e0f" stroke-width="1.5" marker-end="url(#arr)"/>
+
+          <!-- MODELS -->
+          <rect x="610" y="80" width="190" height="160" rx="3" fill="#f5f1ea" stroke="#2d4a1e" stroke-width="2"/>
+          <text x="705" y="108" text-anchor="middle" font-weight="700" font-size="12" fill="#2d4a1e">Языковые модели</text>
+          <line x1="620" y1="116" x2="790" y2="116" stroke="#d0c8bb" stroke-width="1"/>
+          <text x="705" y="136" text-anchor="middle" fill="#4a5568">en_core_web_trf</text>
+          <text x="705" y="152" text-anchor="middle" fill="#4a5568">es_core_news_lg</text>
+          <text x="705" y="168" text-anchor="middle" fill="#4a5568">de_core_news_lg</text>
+          <text x="705" y="184" text-anchor="middle" fill="#4a5568">ru_core_news_lg</text>
+          <line x1="620" y1="196" x2="790" y2="196" stroke="#d0c8bb" stroke-width="1"/>
+          <text x="705" y="214" text-anchor="middle" fill="#8a8070">Helsinki-NLP MarianMT</text>
+          <text x="705" y="230" text-anchor="middle" fill="#8a8070">XLM-RoBERTa</text>
+
+          <!-- DEFS -->
+          <defs>
+            <marker id="arr" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+              <path d="M0,0 L0,6 L8,3 z" fill="#0e0e0f"/>
+            </marker>
+          </defs>
+        </svg>
+      </div>
+    </div>
+  </div>
+
+</main>
+
+<footer>
+  <div class="footer-inner">
+    <div>
+      <div class="footer-logo">LinguaScope</div>
+      <div class="footer-info" style="margin-top:0.25rem;">ВКР · Драгунов Павел · РУДН · Лингвистика 45.03.02 · 2026</div>
+    </div>
+    <div class="footer-tech">
+      <span class="tech-tag">Python 3.10</span>
+      <span class="tech-tag">FastAPI</span>
+      <span class="tech-tag">spaCy 3.7</span>
+      <span class="tech-tag">React 18</span>
+      <span class="tech-tag">PostgreSQL</span>
+      <span class="tech-tag">Docker</span>
+      <span class="tech-tag">Universal Dependencies</span>
+    </div>
+  </div>
+</footer>
+
+<script>
+// ═══════════════════════════════════════
+// DATA
+// ═══════════════════════════════════════
+
+const EXAMPLES = {
+  en1: { lang: 'en', text: 'The scientist discovered a new method for analyzing neural networks.' },
+  es1: { lang: 'es', text: 'El científico descubrió un nuevo método de análisis lingüístico.' },
+  de1: { lang: 'de', text: 'Der Wissenschaftler entdeckte eine neue Analysemethode für Sprachstrukturen.' },
+  ru1: { lang: 'ru', text: 'Учёный обнаружил новый метод анализа лингвистических структур.' }
+};
+
+const TYPOLOGY_ROWS = [
+  ['Тип языка', 'Аналитический', 'Флективный', 'Флективный', 'Флективный'],
+  ['Падежи', '0 (2 у мест.)', '0', '4', '6'],
+  ['Грам. род', '0 (у мест.)', '2', '3', '3'],
+  ['Артикли', '✓', '✓', '✓', '✗'],
+  ['Глаг. времён', '12', '17', '6', '3'],
+  ['Вид глагола', '—', '—', '—', '✓ СВ/НСВ'],
+  ['Порядок слов', 'SVO (жёстк.)', 'SVO (гибк.)', 'V2', 'Свободный'],
+  ['Согласование', 'Минимальное', 'Развитое', 'Развитое', 'Развитое'],
+  ['Индекс синт.', '1.68', '2.37', '2.56', '3.33']
+];
+
+const LANG_COLORS = { en: '#1a3a5c', es: '#8b1a1a', de: '#2d4a1e', ru: '#3d1a5c' };
+const LANG_NAMES  = { en: 'English', es: 'Español', de: 'Deutsch', ru: 'Русский' };
+const ACC_DATA = [
+  { task: 'POS-tagging (EN)', val: 97.8, color: '#1a3a5c' },
+  { task: 'POS-tagging (ES)', val: 97.9, color: '#8b1a1a' },
+  { task: 'POS-tagging (DE)', val: 97.6, color: '#2d4a1e' },
+  { task: 'POS-tagging (RU)', val: 97.3, color: '#3d1a5c' },
+  { task: 'Dep.Parse (EN)', val: 94.2, color: '#1a3a5c' },
+  { task: 'Dep.Parse (ES)', val: 93.7, color: '#8b1a1a' },
+  { task: 'Dep.Parse (DE)', val: 92.9, color: '#2d4a1e' },
+  { task: 'Dep.Parse (RU)', val: 91.4, color: '#3d1a5c' },
+];
+const BLEU_DATA = [
+  { pair: 'EN→ES', val: 32.4 },
+  { pair: 'EN→DE', val: 29.8 },
+  { pair: 'EN→RU', val: 26.1 },
+  { pair: 'ES→EN', val: 42.3 },
+  { pair: 'DE→EN', val: 39.7 },
+  { pair: 'RU→EN', val: 38.5 },
+];
+
+// ═══════════════════════════════════════
+// STATE
+// ═══════════════════════════════════════
+let currentLang = 'en';
+let currentExampleKey = 'en1';
+let transLangSrc = 'en';
+let currentTranslations = {
+  en: { text: '' },
+  es: { text: '' },
+  de: { text: '' },
+  ru: { text: '' }
+};
+
+// ═══════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════
+document.addEventListener('DOMContentLoaded', () => {
+  const ta = document.getElementById('input-text');
+  ta.addEventListener('input', () => {
+    document.getElementById('char-count').textContent = ta.value.length + ' символов';
+  });
+  buildTypologyTable();
+  buildSynthChart();
+  buildAccChart();
+  buildBleuChart();
+  const initialText = document.getElementById('trans-input').value || '';
+  currentTranslations[transLangSrc].text = initialText;
+  renderTranslations();
+  loadExample('en1');
+});
+
+// ═══════════════════════════════════════
+// TABS
+// ═══════════════════════════════════════
+function switchTab(name) {
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+  document.getElementById('tab-' + name).classList.add('active');
+  document.getElementById('panel-' + name).classList.add('active');
+  if (name === 'about') setTimeout(animateAccBars, 100);
+  if (name === 'compare') setTimeout(animateSynthBars, 100);
+  if (name === 'translate') setTimeout(animateBleuBars, 100);
+}
+
+// ═══════════════════════════════════════
+// LANG SELECT
+// ═══════════════════════════════════════
+function setLang(l) {
+  currentLang = l;
+  document.querySelectorAll('.lang-btn').forEach(b => {
+    b.classList.remove('active');
+  });
+  document.querySelectorAll('.lang-selector .lang-btn.' + l).forEach(b => b.classList.add('active'));
+  // update accuracy badge
+  const accMap = { en: '97.8%', es: '97.9%', de: '97.6%', ru: '97.3%' };
+  const models = { en: 'en_core_web_trf', es: 'es_core_news_lg', de: 'de_core_news_lg', ru: 'ru_core_news_lg' };
+  const badge = document.getElementById('pos-accuracy');
+  if (badge) badge.textContent = 'spaCy · ' + accMap[l] + ' acc.';
+}
+
+// ═══════════════════════════════════════
+// EXAMPLES
+// ═══════════════════════════════════════
+function loadExample(key) {
+  const ex = EXAMPLES[key];
+  currentExampleKey = key;
+  document.getElementById('input-text').value = ex.text;
+  document.getElementById('char-count').textContent = ex.text.length + ' символов';
+  setLang(ex.lang);
+  // Switch the lang button
+  document.querySelectorAll('#panel-analyze .lang-btn').forEach(b => b.classList.remove('active'));
+  const btn = document.querySelector('#panel-analyze .lang-btn.' + ex.lang);
+  if (btn) btn.classList.add('active');
+}
+
+// ═══════════════════════════════════════
+// ANALYSIS
+// ═══════════════════════════════════════
+function runAnalysis() {
+  const btn = document.getElementById('analyze-btn');
+  const text = document.getElementById('input-text').value.trim();
+  if (!text) return;
+
+  setInlineError('analysis-error', '');
+  btn.classList.add('loading');
+  btn.disabled = true;
+
+  callAnalyzeApi({
+    text,
+    lang: currentLang,
+    mode: 'morph'
+  }).then((data) => {
+    renderResults(data);
+  }).catch((err) => {
+    setInlineError('analysis-error', err.message || 'Ошибка анализа. Попробуйте снова.');
+  }).finally(() => {
+    btn.classList.remove('loading');
+    btn.disabled = false;
+  });
+}
+
+function renderResults(data) {
+  const results = document.getElementById('results');
+  results.classList.add('visible');
+
+  const t = data.tokens;
+  document.getElementById('m-tokens').textContent = t.length;
+  document.getElementById('m-sentences').textContent = String(data.sentence_count || 1);
+  const posSet = new Set(t.map(x => x.pos));
+  document.getElementById('m-types').textContent = posSet.size;
+  document.getElementById('m-synth').textContent = data.synth;
+
+  const meta = document.getElementById('results-meta');
+  meta.textContent = t.length + ' токенов · модель: ' + data.model;
+
+  // TOKENS
+  const row = document.getElementById('tokens-row');
+  row.innerHTML = '';
+  t.forEach((tok, i) => {
+    const card = document.createElement('div');
+    card.className = 'token-card';
+    card.style.animationDelay = (i * 0.05) + 's';
+    card.innerHTML = `
+      <span class="token-word">${tok.word}</span>
+      <span class="token-lemma">${tok.lemma}</span>
+      <span class="token-pos pos-${tok.pos}">${tok.pos}</span>
+    `;
+    card.addEventListener('click', () => showTokenDetail(tok, card));
+    row.appendChild(card);
+  });
+
+  // DEP TREE
+  renderDepTree(t);
+
+  results.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
+function showTokenDetail(tok, card) {
+  document.querySelectorAll('.token-card').forEach(c => c.classList.remove('selected'));
+  card.classList.add('selected');
+
+  const detail = document.getElementById('token-detail');
+  const grid = document.getElementById('detail-grid');
+  detail.classList.add('visible');
+
+  const fields = [
+    ['Форма', tok.word],
+    ['Лемма', tok.lemma],
+    ['Часть речи', tok.pos],
+    ['Отношение', tok.dep],
+    ['Вершина', tok.head],
+    ['Морф. признаки', tok.morph || '—'],
+  ];
+
+  grid.innerHTML = fields.map(([k, v]) => `
+    <div class="detail-item">
+      <span class="detail-key">${k}</span>
+      <span class="detail-val">${v}</span>
+    </div>
+  `).join('');
+}
+
+// ═══════════════════════════════════════
+// DEP TREE (SVG)
+// ═══════════════════════════════════════
+function renderDepTree(tokens) {
+  const container = document.getElementById('dep-tree');
+  const W = Math.max(tokens.length * 80, 600);
+  const H = 200;
+  const xPad = 40;
+  const step = (W - xPad * 2) / (tokens.length - 1);
+
+  // node positions
+  const nodes = tokens.map((t, i) => ({
+    x: xPad + i * step,
+    y: H - 50,
+    ...t
+  }));
+
+  // find root
+  const rootIdx = tokens.findIndex(t => t.dep === 'ROOT');
+
+  let arcs = '';
+  let labels = '';
+
+  nodes.forEach((n, i) => {
+    if (n.dep === 'ROOT') return;
+    const headIdx = tokens.findIndex(t => t.word === n.head);
+    if (headIdx < 0) return;
+    const h = nodes[headIdx];
+    const cx = (n.x + h.x) / 2;
+    const dy = Math.abs(i - headIdx) * 28 + 20;
+    const cy = n.y - dy;
+    arcs += `<path d="M${n.x},${n.y - 18} Q${cx},${cy} ${h.x},${h.y - 18}" fill="none" stroke="#d0c8bb" stroke-width="1.5" marker-end="url(#dep-arr)"/>`;
+    labels += `<text x="${cx}" y="${cy - 5}" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="9" fill="#8a8070">${n.dep}</text>`;
+  });
+
+  let nodesSvg = nodes.map(n => `
+    <g>
+      <rect x="${n.x - 28}" y="${n.y - 14}" width="56" height="22" rx="2" fill="${n.dep === 'ROOT' ? '#0e0e0f' : '#f5f1ea'}" stroke="${n.dep === 'ROOT' ? '#0e0e0f' : '#d0c8bb'}" stroke-width="1.5"/>
+      <text x="${n.x}" y="${n.y + 2}" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="10.5" font-weight="${n.dep === 'ROOT' ? '700' : '400'}" fill="${n.dep === 'ROOT' ? '#f5f1ea' : '#0e0e0f'}">${n.word}</text>
+    </g>
+    <text x="${n.x}" y="${n.y + 30}" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="9" fill="#8a8070">${n.pos}</text>
+  `).join('');
+
+  container.innerHTML = `
+    <svg viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg" style="min-width:${W}px;">
+      <defs>
+        <marker id="dep-arr" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto">
+          <path d="M0,0 L0,6 L6,3 z" fill="#d0c8bb"/>
+        </marker>
+      </defs>
+      ${arcs}
+      ${labels}
+      ${nodesSvg}
+    </svg>
+  `;
+}
+
+// ═══════════════════════════════════════
+// TYPOLOGY TABLE
+// ═══════════════════════════════════════
+function buildTypologyTable() {
+  const tbody = document.getElementById('typology-tbody');
+  if (!tbody) return;
+  tbody.innerHTML = TYPOLOGY_ROWS.map((row, i) => `
+    <tr>
+      <td style="padding:0.5rem 0.75rem;border-bottom:1px solid #d0c8bb;color:#4a5568;font-size:0.68rem;letter-spacing:0.06em;text-transform:uppercase;">${row[0]}</td>
+      ${row.slice(1).map((v, j) => {
+        const colors = ['#1a3a5c','#8b1a1a','#2d4a1e','#3d1a5c'];
+        return `<td style="padding:0.5rem 0.75rem;border-bottom:1px solid #d0c8bb;text-align:center;color:${colors[j]};font-weight:600;font-size:0.75rem;">${v}</td>`;
+      }).join('')}
+    </tr>
+  `).join('');
+}
+
+// ═══════════════════════════════════════
+// SYNTH CHART
+// ═══════════════════════════════════════
+function buildSynthChart() {
+  const c = document.getElementById('synth-chart');
+  if (!c) return;
+  const data = [
+    { lang: 'English', val: 1.68, color: '#1a3a5c' },
+    { lang: 'Español', val: 2.37, color: '#8b1a1a' },
+    { lang: 'Deutsch', val: 2.56, color: '#2d4a1e' },
+    { lang: 'Русский', val: 3.33, color: '#3d1a5c' },
+  ];
+  c.innerHTML = data.map(d => `
+    <div class="acc-row" style="margin-bottom:0.75rem;">
+      <span class="acc-task" style="color:${d.color};font-weight:700;">${d.lang}</span>
+      <div class="acc-bar-wrap">
+        <div class="acc-bar synth-bar" data-val="${(d.val/4)*100}" style="background:${d.color};width:0;"></div>
+      </div>
+      <span class="acc-pct" style="color:${d.color};">${d.val}</span>
+    </div>
+  `).join('');
+}
+
+function animateSynthBars() {
+  document.querySelectorAll('.synth-bar').forEach(bar => {
+    bar.style.width = bar.dataset.val + '%';
+  });
+}
+
+// ═══════════════════════════════════════
+// ACC CHART
+// ═══════════════════════════════════════
+function buildAccChart() {
+  const c = document.getElementById('acc-chart');
+  if (!c) return;
+  c.innerHTML = ACC_DATA.map(d => `
+    <div class="acc-row">
+      <span class="acc-task">${d.task}</span>
+      <div class="acc-bar-wrap">
+        <div class="acc-bar acc-bar-anim" data-val="${d.val}" style="background:${d.color};width:0;"></div>
+      </div>
+      <span class="acc-pct">${d.val}%</span>
+    </div>
+  `).join('');
+}
+
+function animateAccBars() {
+  document.querySelectorAll('.acc-bar-anim').forEach(bar => {
+    bar.style.width = bar.dataset.val + '%';
+  });
+}
+
+// ═══════════════════════════════════════
+// BLEU CHART
+// ═══════════════════════════════════════
+function buildBleuChart() {
+  const c = document.getElementById('bleu-chart');
+  if (!c) return;
+  c.innerHTML = BLEU_DATA.map(d => `
+    <div class="acc-row">
+      <span class="acc-task">${d.pair}</span>
+      <div class="acc-bar-wrap">
+        <div class="acc-bar bleu-bar-anim" data-val="${(d.val/50)*100}" style="background:#b5860d;width:0;"></div>
+      </div>
+      <span class="acc-pct">${d.val}</span>
+    </div>
+  `).join('');
+}
+
+function animateBleuBars() {
+  document.querySelectorAll('.bleu-bar-anim').forEach(bar => {
+    bar.style.width = bar.dataset.val + '%';
+  });
+}
+
+// ═══════════════════════════════════════
+// TRANSLATION
+// ═══════════════════════════════════════
+function setTransLang(side, lang, btn) {
+  transLangSrc = lang;
+  btn.closest('.lang-selector').querySelectorAll('.lang-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  currentTranslations[lang].text = document.getElementById('trans-input').value.trim();
+  renderTranslations();
+}
+
+function runTranslation() {
+  const btn = document.getElementById('translate-btn');
+  const text = document.getElementById('trans-input').value.trim();
+  if (!text) return;
+
+  setInlineError('translate-error', '');
+  btn.classList.add('loading');
+  btn.disabled = true;
+
+  callAnalyzeApi({
+    text,
+    lang: transLangSrc,
+    mode: 'translate'
+  }).then((data) => {
+    currentTranslations = {
+      en: { text: data.translations?.en || '' },
+      es: { text: data.translations?.es || '' },
+      de: { text: data.translations?.de || '' },
+      ru: { text: data.translations?.ru || '' }
+    };
+    renderTranslations();
+  }).catch((err) => {
+    setInlineError('translate-error', err.message || 'Ошибка перевода. Попробуйте снова.');
+  }).finally(() => {
+    btn.classList.remove('loading');
+    btn.disabled = false;
+  });
+}
+
+function renderTranslations() {
+  const container = document.getElementById('trans-results');
+  if (!container) return;
+  container.innerHTML = Object.entries(currentTranslations).map(([lang, data]) => `
+    <div class="trans-cell">
+      <div class="trans-cell-header">
+        <span class="lang-dot ${lang}"></span>
+        <span class="lang-name ${lang}">${LANG_NAMES[lang]}</span>
+        ${lang === transLangSrc ? '<span style="font-family:JetBrains Mono,monospace;font-size:0.6rem;color:#8a8070;margin-left:auto;">исходный</span>' : ''}
+      </div>
+      <div class="trans-body">${escapeHtml(data.text || '')}</div>
+      <div class="trans-metrics">
+        <span class="bleu-label">BLEU</span>
+        <div class="bleu-bar-wrap">
+          <div class="bleu-bar" data-val="0" style="background:${LANG_COLORS[lang]};width:${lang===transLangSrc?100:0}%;"></div>
+        </div>
+        <span class="bleu-label">${lang===transLangSrc?'—':'n/a'}</span>
+      </div>
+    </div>
+  `).join('');
+}
+
+async function callAnalyzeApi(payload) {
+  const resp = await fetch('/api/analyze', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload)
+  });
+
+  let body = {};
+  try {
+    body = await resp.json();
+  } catch (_) {
+    throw new Error('Сервер вернул некорректный JSON.');
+  }
+
+  if (!resp.ok) {
+    throw new Error(body.error || 'Ошибка API запроса.');
+  }
+  return body;
+}
+
+function setInlineError(id, message) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.textContent = message || '';
+  el.classList.toggle('visible', Boolean(message));
+}
+
+function escapeHtml(value) {
+  return String(value)
+    .replaceAll('&', '&amp;')
+    .replaceAll('<', '&lt;')
+    .replaceAll('>', '&gt;')
+    .replaceAll('"', '&quot;')
+    .replaceAll("'", '&#039;');
+}
+</script>
+</body>
+</html>
