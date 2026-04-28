@@ -5,6 +5,8 @@ const CORS_HEADERS = {
 };
 
 const OPENAI_URL = "https://api.openai.com/v1/chat/completions";
+const QWEN_URL = "https://dashscope.aliyuncs.com/api/v1/services/aigc/text-generation/generation";
+const DEEPSEEK_URL = "https://api.deepseek.com/v1/chat/completions";
 const SUPPORTED_LANGS = ["en", "es", "de", "ru"];
 const SUPPORTED_MODES = ["morph", "translate", "compare"];
 
@@ -139,6 +141,85 @@ async function callOpenAI({ apiKey, prompt }) {
   return JSON.parse(normalized);
 }
 
+async function callDeepSeek({ apiKey, prompt }) {
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 25000);
+
+  const response = await fetch(DEEPSEEK_URL, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${apiKey}`
+    },
+    body: JSON.stringify({
+      model: "deepseek-chat",
+      temperature: 0.1,
+      max_tokens: 1800,
+      messages: [
+        {
+          role: "system",
+          content: "You always return strict JSON only."
+        },
+        {
+          role: "user",
+          content: prompt
+        }
+      ],
+      response_format: { type: "json_object" }
+    }),
+    signal: controller.signal
+  }).finally(() => {
+    clearTimeout(timeout);
+  });
+
+  if (!response.ok) {
+    const errorBody = await response.text();
+    throw new Error(`DeepSeek request failed: ${response.status} ${errorBody}`);
+  }
+
+  const body = await response.json();
+  const content = body?.choices?.[0]?.message?.content;
+  const normalized = normalizeJsonString(content);
+
+  if (!normalized) {
+    throw new Error("DeepSeek returned empty response content.");
+  }
+
+  return JSON.parse(normalized);
+}
+
+async function callAIWithFallback({ prompt }) {
+  const providers = [
+    {
+      name: "OpenAI",
+      key: process.env.OPENAI_API_KEY,
+      func: callOpenAI
+    },
+    {
+      name: "DeepSeek",
+      key: process.env.DEEPSEEK_API_KEY,
+      func: callDeepSeek
+    }
+  ];
+
+  for (const provider of providers) {
+    if (!provider.key) {
+      console.log(`${provider.name} API key not configured, skipping...`);
+      continue;
+    }
+
+    try {
+      console.log(`Trying ${provider.name}...`);
+      return await provider.func({ apiKey: provider.key, prompt });
+    } catch (error) {
+      console.error(`${provider.name} failed:`, error.message);
+      continue;
+    }
+  }
+
+  throw new Error("All AI providers failed. Please configure at least one API key.");
+}
+
 function validatePayload(payload) {
   if (!payload || typeof payload !== "object") return "Body must be a JSON object.";
   if (typeof payload.text !== "string" || !payload.text.trim()) return "Field 'text' must be a non-empty string.";
@@ -160,18 +241,18 @@ export default async function handler(req, res) {
     return;
   }
 
-  const apiKey = process.env.OPENAI_API_KEY;
-  console.log("API Key exists:", !!apiKey);
-  console.log("API Key length:", apiKey?.length || 0);
-  console.log("API Key format:", apiKey?.startsWith("sk-") ? "Valid format" : "Invalid format");
+  const hasOpenAI = !!process.env.OPENAI_API_KEY;
+  const hasDeepSeek = !!process.env.DEEPSEEK_API_KEY;
   
-  if (!apiKey) {
-    sendJson(res, 500, { error: "OPENAI_API_KEY is not configured." });
-    return;
-  }
+  console.log("Available providers:", {
+    OpenAI: hasOpenAI,
+    DeepSeek: hasDeepSeek
+  });
   
-  if (!apiKey.startsWith("sk-")) {
-    sendJson(res, 500, { error: "OPENAI_API_KEY format is invalid." });
+  if (!hasOpenAI && !hasDeepSeek) {
+    sendJson(res, 500, { 
+      error: "No AI provider configured. Please add OPENAI_API_KEY or DEEPSEEK_API_KEY environment variable." 
+    });
     return;
   }
 
@@ -191,7 +272,7 @@ export default async function handler(req, res) {
 
   try {
     const prompt = buildPrompt(payload);
-    const aiResult = await callOpenAI({ apiKey, prompt });
+    const aiResult = await callAIWithFallback({ prompt });
 
     if (payload.mode === "morph") {
       sendJson(res, 200, {
