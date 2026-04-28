@@ -8,14 +8,11 @@ const OPENAI_URL = "https://api.openai.com/v1/chat/completions";
 const SUPPORTED_LANGS = ["en", "es", "de", "ru"];
 const SUPPORTED_MODES = ["morph", "translate", "compare"];
 
-function jsonResponse(status, payload) {
-  return new Response(JSON.stringify(payload), {
-    status,
-    headers: {
-      "Content-Type": "application/json; charset=utf-8",
-      ...CORS_HEADERS
-    }
-  });
+function sendJson(res, status, payload) {
+  res.status(status);
+  Object.entries(CORS_HEADERS).forEach(([key, value]) => res.setHeader(key, value));
+  res.setHeader("Content-Type", "application/json; charset=utf-8");
+  res.send(JSON.stringify(payload));
 }
 
 function normalizeJsonString(content) {
@@ -96,6 +93,9 @@ ${text}`;
 }
 
 async function callOpenAI({ apiKey, prompt }) {
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 25000);
+
   const response = await fetch(OPENAI_URL, {
     method: "POST",
     headers: {
@@ -105,6 +105,7 @@ async function callOpenAI({ apiKey, prompt }) {
     body: JSON.stringify({
       model: "gpt-4o-mini",
       temperature: 0.1,
+      max_tokens: 1800,
       messages: [
         {
           role: "system",
@@ -116,7 +117,10 @@ async function callOpenAI({ apiKey, prompt }) {
         }
       ],
       response_format: { type: "json_object" }
-    })
+    }),
+    signal: controller.signal
+  }).finally(() => {
+    clearTimeout(timeout);
   });
 
   if (!response.ok) {
@@ -143,30 +147,37 @@ function validatePayload(payload) {
   return null;
 }
 
-export default async function handler(req) {
+export default async function handler(req, res) {
+  Object.entries(CORS_HEADERS).forEach(([key, value]) => res.setHeader(key, value));
+
   if (req.method === "OPTIONS") {
-    return new Response(null, { status: 204, headers: CORS_HEADERS });
+    res.status(204).end();
+    return;
   }
 
   if (req.method !== "POST") {
-    return jsonResponse(405, { error: "Method not allowed. Use POST." });
+    sendJson(res, 405, { error: "Method not allowed. Use POST." });
+    return;
   }
 
   const apiKey = process.env.OPENAI_API_KEY;
   if (!apiKey) {
-    return jsonResponse(500, { error: "OPENAI_API_KEY is not configured." });
+    sendJson(res, 500, { error: "OPENAI_API_KEY is not configured." });
+    return;
   }
 
   let payload;
   try {
-    payload = req.body ?? (await req.json());
+    payload = typeof req.body === "string" ? JSON.parse(req.body) : req.body;
   } catch {
-    return jsonResponse(400, { error: "Invalid JSON body." });
+    sendJson(res, 400, { error: "Invalid JSON body." });
+    return;
   }
 
   const validationError = validatePayload(payload);
   if (validationError) {
-    return jsonResponse(400, { error: validationError });
+    sendJson(res, 400, { error: validationError });
+    return;
   }
 
   try {
@@ -174,17 +185,18 @@ export default async function handler(req) {
     const aiResult = await callOpenAI({ apiKey, prompt });
 
     if (payload.mode === "morph") {
-      return jsonResponse(200, {
+      sendJson(res, 200, {
         tokens: Array.isArray(aiResult.tokens) ? aiResult.tokens : [],
         synth: String(aiResult.synth_index ?? "0.00"),
         model: String(aiResult.model_name ?? `gpt-4o-mini (${payload.lang})`),
         sentence_count: Number(aiResult.sentence_count ?? 1)
       });
+      return;
     }
 
     if (payload.mode === "translate") {
       const translations = aiResult.translations || {};
-      return jsonResponse(200, {
+      sendJson(res, 200, {
         translations: {
           en: String(translations.en ?? ""),
           es: String(translations.es ?? ""),
@@ -193,15 +205,18 @@ export default async function handler(req) {
         },
         source_lang: String(aiResult.source_lang ?? payload.lang)
       });
+      return;
     }
 
-    return jsonResponse(200, {
+    sendJson(res, 200, {
       compare: aiResult.compare || {}
     });
+    return;
   } catch (error) {
-    return jsonResponse(500, {
+    sendJson(res, 500, {
       error: "Failed to analyze text with OpenAI.",
       details: error instanceof Error ? error.message : "Unknown server error."
     });
+    return;
   }
 }
