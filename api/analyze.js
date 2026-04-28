@@ -7,6 +7,7 @@ const CORS_HEADERS = {
 const OPENAI_URL = "https://api.openai.com/v1/chat/completions";
 const QWEN_URL = "https://dashscope.aliyuncs.com/api/v1/services/aigc/text-generation/generation";
 const DEEPSEEK_URL = "https://api.deepseek.com/v1/chat/completions";
+const GROQ_URL = "https://api.groq.com/openai/v1/chat/completions";
 const SUPPORTED_LANGS = ["en", "es", "de", "ru"];
 const SUPPORTED_MODES = ["morph", "translate", "compare"];
 
@@ -188,17 +189,69 @@ async function callDeepSeek({ apiKey, prompt }) {
   return JSON.parse(normalized);
 }
 
+async function callGroq({ apiKey, prompt }) {
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 25000);
+
+  const response = await fetch(GROQ_URL, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${apiKey}`
+    },
+    body: JSON.stringify({
+      model: "llama-3.1-70b-versatile",
+      temperature: 0.1,
+      max_tokens: 1800,
+      messages: [
+        {
+          role: "system",
+          content: "You always return strict JSON only."
+        },
+        {
+          role: "user",
+          content: prompt
+        }
+      ],
+      response_format: { type: "json_object" }
+    }),
+    signal: controller.signal
+  }).finally(() => {
+    clearTimeout(timeout);
+  });
+
+  if (!response.ok) {
+    const errorBody = await response.text();
+    throw new Error(`Groq request failed: ${response.status} ${errorBody}`);
+  }
+
+  const body = await response.json();
+  const content = body?.choices?.[0]?.message?.content;
+  const normalized = normalizeJsonString(content);
+
+  if (!normalized) {
+    throw new Error("Groq returned empty response content.");
+  }
+
+  return JSON.parse(normalized);
+}
+
 async function callAIWithFallback({ prompt }) {
   const providers = [
     {
-      name: "OpenAI",
-      key: process.env.OPENAI_API_KEY,
-      func: callOpenAI
+      name: "Groq",
+      key: process.env.GROQ_API_KEY,
+      func: callGroq
     },
     {
       name: "DeepSeek",
       key: process.env.DEEPSEEK_API_KEY,
       func: callDeepSeek
+    },
+    {
+      name: "OpenAI",
+      key: process.env.OPENAI_API_KEY,
+      func: callOpenAI
     }
   ];
 
@@ -243,15 +296,17 @@ export default async function handler(req, res) {
 
   const hasOpenAI = !!process.env.OPENAI_API_KEY;
   const hasDeepSeek = !!process.env.DEEPSEEK_API_KEY;
+  const hasGroq = !!process.env.GROQ_API_KEY;
   
   console.log("Available providers:", {
-    OpenAI: hasOpenAI,
-    DeepSeek: hasDeepSeek
+    Groq: hasGroq,
+    DeepSeek: hasDeepSeek,
+    OpenAI: hasOpenAI
   });
   
-  if (!hasOpenAI && !hasDeepSeek) {
+  if (!hasOpenAI && !hasDeepSeek && !hasGroq) {
     sendJson(res, 500, { 
-      error: "No AI provider configured. Please add OPENAI_API_KEY or DEEPSEEK_API_KEY environment variable." 
+      error: "No AI provider configured. Please add GROQ_API_KEY, DEEPSEEK_API_KEY, or OPENAI_API_KEY environment variable." 
     });
     return;
   }
