@@ -161,8 +161,17 @@ export default async function handler(req, res) {
   }
 
   const apiKey = process.env.OPENAI_API_KEY;
+  console.log("API Key exists:", !!apiKey);
+  console.log("API Key length:", apiKey?.length || 0);
+  console.log("API Key format:", apiKey?.startsWith("sk-") ? "Valid format" : "Invalid format");
+  
   if (!apiKey) {
     sendJson(res, 500, { error: "OPENAI_API_KEY is not configured." });
+    return;
+  }
+  
+  if (!apiKey.startsWith("sk-")) {
+    sendJson(res, 500, { error: "OPENAI_API_KEY format is invalid." });
     return;
   }
 
@@ -213,6 +222,10 @@ export default async function handler(req, res) {
     });
     return;
   } catch (error) {
+    console.error("API Error:", error);
+    console.error("Error message:", error instanceof Error ? error.message : "Unknown error");
+    console.error("Stack:", error instanceof Error ? error.stack : "No stack");
+    
     sendJson(res, 500, {
       error: "Failed to analyze text with OpenAI.",
       details: error instanceof Error ? error.message : "Unknown server error."
